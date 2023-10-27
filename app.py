@@ -13,8 +13,10 @@ st.title('Find local wildlife')
 st.sidebar.markdown("## Choose a location and animal category")
 
 #-- Set an animal group
-animal_group = st.sidebar.selectbox('What animal group are you interested in?',
-                                    ['Mammalia', 'Amphibia'])
+animal_group = st.sidebar.selectbox(
+    'What animal group are you interested in?',
+        ['Mammalia', 'Amphibia', 'Reptilia', 'Aves', 'Insecta', 'Mollusca']
+)
 # TODO: Autocomplete place name or validate user given place
 place_id = 55071 # Big Bend National Park
 
@@ -34,7 +36,16 @@ response = requests.get(url, params=parameters)
 data = response.json()['results']
 normalized = pd.json_normalize(data)
 df = pd.DataFrame.from_dict(normalized)
-df = df[['taxon.preferred_common_name','count','taxon.wikipedia_url']]
+df_short = df[['taxon.preferred_common_name', 'taxon.name','count','taxon.wikipedia_url']].copy()
+df_short = df_short.rename(columns={
+    'taxon.preferred_common_name': 'Common Name',
+    'taxon.name': 'Latin Name',
+    'count': 'Number of observations',
+    'taxon.wikipedia_url': 'Wikipedia URL',
 
-st.subheader(f"Animals in {place_id}")
-st.table(df)
+})
+number_species = len(df)
+
+st.subheader(f"{animal_group} in {place_id}")
+st.text(f"There are {number_species} species observed in this location")
+st.table(df_short)
