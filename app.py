@@ -64,22 +64,33 @@ if st.session_state.best_loc_match and st.session_state.animal_group:
         normalized = pd.json_normalize(data)
         df = pd.DataFrame.from_dict(normalized)
 
-        df_short = df[['taxon.preferred_common_name', 'taxon.name','count','taxon.wikipedia_url']].copy()
-        df_short = df_short.rename(columns={
-            'taxon.preferred_common_name': 'Common Name',
-            'taxon.name': 'Latin Name',
-            'count': 'Number of observations',
-            'taxon.wikipedia_url': 'Wikipedia URL',
+        df_short = df[
+            ['taxon.default_photo.medium_url',
+             'taxon.preferred_common_name',
+             'taxon.name',
+             'count',
+             'taxon.wikipedia_url']
+        ].copy()
 
-        })
-        df_short.index = df_short.index + 1
+        # df_short.index = df_short.index + 1
 
-        # TODO: cache openai calls 
-        df_short["Summary"] = df_short['Wikipedia URL'].apply(llm_summarize)
-        
         number_species = len(df)
         st.text(f'There are {number_species} species observed in this location')
-        st.table(df_short)
+
+        # TODO: cache openai calls 
+        df_short['Summary'] = df_short['taxon.wikipedia_url'].apply(llm_summarize)
+        st.dataframe(
+            df_short,
+            column_config={
+                'taxon.default_photo.medium_url': st.column_config.ImageColumn(label='Image', width='small'),
+                'taxon.preferred_common_name': 'Common Name',
+                'taxon.name': 'Latin Name',
+                'count': st.column_config.NumberColumn(label='Observations', width='small'),
+                'taxon.wikipedia_url': st.column_config.LinkColumn(label='Wikipedia', width='small'),
+                'Summary': st.column_config.TextColumn(label='Quick Facts (double click to view)', width='large'),
+            },
+            hide_index=True,
+        )
 else:
     st.write("not submitted")
 
