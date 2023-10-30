@@ -1,40 +1,8 @@
 import streamlit as st
 import requests
 import pandas as pd
-import time
-
-# Helper functions to make API calls
-def get_iNat_locations(location: str) -> dict:
-    """Submit a location to the iNaturalist/places endpoint to get a 
-    list of possible matches with a corresponding id. Endpoint will autocomplete
-    the string with locations in the database. Places may be countries, counties, cities,
-    other municipal boundaries, points or well known landmarks. 
-    """
-    parameters = {
-        'q': location
-    }
-    url = 'https://api.inaturalist.org/v1/places/autocomplete'
-    response = requests.get(url, params=parameters)
-    location_results = response.json()['results']
-    return {loc['display_name']: loc['id'] for loc in location_results}
-
-def get_iNat_species_count(place_id: int, animal_group: str) -> dict:
-    """Makes API call to iNaturalist/species_count endpoint to return
-    a list of species with the number of observations
-    """
-    # Choose only research grade observations
-    parameters = {
-        'rank': 'species',
-        'iconic_taxa': animal_group,
-        'quality_grade': 'research', # Research grade observations have been validated
-        'place_id': place_id, # ex: Big Bend National Park = 55071
-        'order': 'desc',
-    }
-
-    url = 'https://api.inaturalist.org/v1/observations/species_counts'
-    response = requests.get(url, params=parameters)
-
-    return response.json()
+from ai_util import llm_summarize
+from iNat_util import get_iNat_locations, get_iNat_species_count
 
 
 # Set page config
@@ -104,11 +72,17 @@ if st.session_state.best_loc_match and st.session_state.animal_group:
             'taxon.wikipedia_url': 'Wikipedia URL',
 
         })
+        df_short.index = df_short.index + 1
+
+        # TODO: cache openai calls 
+        df_short["Summary"] = df_short['Wikipedia URL'].apply(llm_summarize)
+        
         number_species = len(df)
         st.text(f'There are {number_species} species observed in this location')
         st.table(df_short)
 else:
     st.write("not submitted")
-# # TODO: make wiki urls in df hyperlinks
+
+# TODO: make wiki urls in df hyperlinks
 
 # TODO add optional downloads as csv or other?
