@@ -1,5 +1,6 @@
 import os
 import openai
+import streamlit as st
 
 # Access the API key from the environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -13,7 +14,7 @@ prompt = """Read this wiki page and give 3 short bullet points:
     - where on the landscape is it most often found?
     - what it eats
     """ 
-
+@st.cache_data
 def llm_summarize(article: str) -> str:
     response = openai.ChatCompletion.create(
         model="pulze-v0",
