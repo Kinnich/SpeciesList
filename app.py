@@ -1,13 +1,12 @@
 import streamlit as st
-import requests
 import pandas as pd
 from ai_util import llm_summarize
 from iNat_util import get_iNat_locations, get_iNat_species_count
 
 
 # Set page config
-apptitle = 'Species List'
-st.set_page_config(page_title=apptitle, page_icon='random', layout='wide')
+apptitle = 'Species Tracker'
+st.set_page_config(page_title=apptitle, page_icon='🐾', layout='wide')
 
 # Title the app
 st.title('Find local wildlife')
@@ -16,8 +15,8 @@ st.title('Find local wildlife')
 if 'best_loc_match' not in st.session_state:
     st.session_state.best_loc_match = None
 
-if 'animal_group' not in st.session_state:
-    st.session_state.animal_group = None
+if 'animal_class' not in st.session_state:
+    st.session_state.animal_class = None
 
 # Create sidebar functionality
 with st.sidebar:
@@ -35,25 +34,25 @@ with st.sidebar:
             key="best_loc_match",
             index=None,
         )
-        # 55071 # Big Bend National Park
+
         if best_match_loc:
             # Get the iNaturalist id for the location (needed to query the species lists)
             place_id = possible_locations[best_match_loc]
             st.session_state.place_id = place_id
 
             # Set an animal group
-            animal_group = st.selectbox(
-                'What animal group are you interested in?',
+            animal_class = st.selectbox(
+                'What class of animals are you interested in?',
                 ['Mammalia', 'Amphibia', 'Reptilia', 'Aves', 'Insecta', 'Mollusca'],
-                key="animal_group",
+                key="animal_class",
                 index=None,
             )
 # Main page displays table only once location and animal group are selected from sidebar
-if st.session_state.best_loc_match and st.session_state.animal_group:
+if st.session_state.best_loc_match and st.session_state.animal_class:
 
-    st.subheader(f"{animal_group} in {st.session_state.best_loc_match}")
+    st.subheader(f"{animal_class} in {st.session_state.best_loc_match}")
     
-    species_list = get_iNat_species_count(place_id, animal_group)
+    species_list = get_iNat_species_count(place_id, animal_class)
     if species_list['total_results'] == 0:
         st.text(
             "Sorry there are no results. \n"
@@ -78,7 +77,8 @@ if st.session_state.best_loc_match and st.session_state.animal_group:
         st.text(f'There are {number_species} species observed in this location')
 
         # TODO: cache openai calls 
-        df_short['Summary'] = df_short['taxon.wikipedia_url'].apply(llm_summarize)
+        # df_short['Summary'] = df_short['taxon.wikipedia_url'].apply(llm_summarize)
+        
         st.dataframe(
             df_short,
             column_config={
@@ -87,13 +87,11 @@ if st.session_state.best_loc_match and st.session_state.animal_group:
                 'taxon.name': 'Latin Name',
                 'count': st.column_config.NumberColumn(label='Observations', width='small'),
                 'taxon.wikipedia_url': st.column_config.LinkColumn(label='Wikipedia', width='small'),
-                'Summary': st.column_config.TextColumn(label='Quick Facts (double click to view)', width='large'),
+                # 'Summary': st.column_config.TextColumn(label='Quick Facts (double click to view)', width='large'),
             },
             hide_index=True,
         )
 else:
-    st.write("not submitted")
-
-# TODO: make wiki urls in df hyperlinks
+    st.write("Choose a location on the sidebar")
 
 # TODO add optional downloads as csv or other?

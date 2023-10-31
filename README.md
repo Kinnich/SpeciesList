@@ -1,2 +1,10 @@
 # SpeciesList
-WIP: simple app built on iNaturalist to determine which wildlife is present in a given area
+WIP: Simple app built on iNaturalist API to create a list of wildlife observed in a given area. 
+
+
+
+
+Launch application:
+```
+streamlit run app.py
+```
