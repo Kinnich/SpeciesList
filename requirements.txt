@@ -1,4 +1,5 @@
 requests
 pandas>=2.1
-streamlit==1.28.0
-openai>=0.28.1
+streamlit==1.28
+openai>=0.28
+streamlit-keyup>=0.2
