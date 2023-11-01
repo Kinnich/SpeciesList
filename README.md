@@ -1,4 +1,4 @@
-# Wildlife Tracker
+# Wildlife Tracker - Local Species Guide
 This is a simple app built on iNaturalist API and Pulze AI to:
 1. List the wildlife observed in a given area
 2. Describe the tracks and signs made by the animal
