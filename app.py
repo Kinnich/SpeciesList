@@ -22,7 +22,7 @@ if 'place_id' not in st.session_state:
 
 # ---Sidebar---
 with st.sidebar:
-    st.markdown('## Choose a location')
+    st.markdown('## Choose a location 🔎 🌎')
     
     location = st_keyup('Enter region, county or city:', placeholder='ex: City of Austin')
     
@@ -57,7 +57,7 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
     
     if species_list['total_results'] == 0:
         st.markdown("""**Sorry, there are no observations recorded in this location. 
-                 Please try a different location or the county.**""")
+                 Please try a different location.**""")
     else:
         
         data = species_list['results']
@@ -90,10 +90,10 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
             },
             hide_index=True,
         )
-
+        
+        # Get tracking info for a selected animal
         with container:
-            # Get tracking info for a selected animal - using a 'select box' in a 'form' so that
-            # the popup box will close and not freeze as it does using only the select box
+            # using a 'form' around the 'select box' so the popup box will close and not freeze
             with st.form('animal_select'):
                 animal = st.selectbox(
                     'Select an animal to learn how to identify their tracks and sign:',
@@ -107,6 +107,7 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
 
                 # Create and format the popup window
                 modal = Modal(key=f"{animal}",title=f"{animal}", padding=10, max_width='650')
+                
                 with modal.container():
                     col1, col2 = st.columns(2, gap="small")
                     with col1:
@@ -119,6 +120,7 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
 
 
 else:
+    # Default starting page
     st.title('Identify local wildlife!')
     st.markdown(
     """
@@ -127,10 +129,8 @@ else:
     2. Describe the tracks and signs made by an animal  
 
     This is meant to aid in learning basic tracking skills and develop a greater understanding and appreciation for what you see when you look around outside.  
-    For more information about tracking I highly recommend checking out [Nature Tracking](https://naturetracking.com/)
+    For more information about tracking checkout [Nature Tracking](https://naturetracking.com/)
     """
     )
     st.divider()
     st.write("⬅️ To get started, choose a location in the sidebar!")
-
-# TODO add optional downloads as csv or other?

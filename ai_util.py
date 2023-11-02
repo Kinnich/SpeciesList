@@ -2,12 +2,11 @@ import os
 import openai
 import streamlit as st
 
-# Access the API key from the environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_base = "https://api.pulze.ai/v1" # enter Pulze's URL
 
+# API key stored in streamlit secrets
+openai.api_key = st.secrets["pulzeai"]["OPENAI_API_KEY"]
+openai.api_base = "https://api.pulze.ai/v1"
 
-# url = "http://en.wikipedia.org/wiki/Raccoon"
 
 prompt = """What signs can I use to track this animal?
     - What do the tracks look like?
@@ -20,7 +19,7 @@ prompt = """What signs can I use to track this animal?
     Tracks, Scat, Feeding_signs, Home, Seasonal Activity
     """ 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def llm_summarize(animal: str) -> str:
     response = openai.ChatCompletion.create(
         model="pulze-v0",
