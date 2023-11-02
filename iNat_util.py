@@ -5,7 +5,8 @@ import streamlit as st
 
 @dataclass
 class Location:
-    """Small dataclass to hold the iNat locations returned from the API results"""
+    """Small dataclass to hold just the attributes needed
+    from the the JSON-formatted iNaturalist API response"""
     name: str
     id: int
     place_type: int
@@ -15,7 +16,8 @@ def get_iNat_locations(location: str) -> list[Location]:
     """Submit a location to the iNaturalist/places endpoint to get a 
     list of possible matches with a corresponding id. Endpoint will autocomplete
     the string with locations in the database. Places may be countries, counties, cities,
-    other municipal boundaries, points or well known landmarks. 
+    other municipal boundaries, points or well known landmarks. Filters out any results
+    that are points and not polygons.
     """
     parameters = {
         'q': location,
@@ -35,9 +37,8 @@ def get_iNat_locations(location: str) -> list[Location]:
 
 def get_iNat_species_count(place_id: int, animal_group: str) -> dict:
     """Makes API call to iNaturalist/species_count endpoint to return
-    a list of species with the number of observations
+    a list of species with the number of research grade observations
     """
-    # Choose only research grade observations
     parameters = {
         'rank': 'species',
         'iconic_taxa': animal_group,

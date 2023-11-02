@@ -1,19 +1,16 @@
+import pandas as pd
 import streamlit as st
+from streamlit.components.v1 import html
 from st_keyup import st_keyup
 from streamlit_modal import Modal
-from streamlit.components.v1 import html
-import pandas as pd
-from ai_util import llm_summarize
-from iNat_util import get_iNat_locations, get_iNat_species_count, Location
+from ai_util import get_animal_facts
+from iNat_util import get_iNat_locations, get_iNat_species_count
 
 # Set page config
 page_title = 'Local Wildlife'
 st.set_page_config(page_title=page_title, page_icon='🐾', layout='wide')
 
 # Initialize session variables
-if 'best_loc_match' not in st.session_state:
-    st.session_state.best_loc_match = None
-
 if 'animal_class' not in st.session_state:
     st.session_state.animal_class = None
 
@@ -78,7 +75,7 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
         
         # Create container to hold the form with selectbox
         container = st.container()
-        
+    
         # Display data in interactive df
         st.dataframe(
             df_short,
@@ -115,7 +112,7 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
                         st.markdown(f"_{latin_name}_")
                     with col2:
                         with st.spinner(f"Gathering info!"):
-                            text = llm_summarize(animal)
+                            text = get_animal_facts(animal)
                             html(text, height=300, scrolling=True, width=300)
 
 

@@ -1,4 +1,3 @@
-import os
 import openai
 import streamlit as st
 
@@ -20,7 +19,8 @@ prompt = """What signs can I use to track this animal?
     """ 
 
 @st.cache_data(show_spinner=False)
-def llm_summarize(animal: str) -> str:
+def get_animal_facts(animal: str) -> str:
+    """Use LLM's chat completion to get facts about a given animal"""
     response = openai.ChatCompletion.create(
         model="pulze-v0",
         max_tokens=350,
