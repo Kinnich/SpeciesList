@@ -13,8 +13,8 @@ prompt = """What signs can I use to track this animal?
     - What feeding signs does this animal leave?
     - Where does the animal make its home/ bed/ nest/ den?
     - In which seasons is the animal active?
-    Return response in html with no formating except 
-    using these headings with <h4> tags: 
+    Return response in markdown with no formating except 
+    using these as level 4 headings: 
     Tracks, Scat, Feeding_signs, Home, Seasonal Activity
     """ 
 
