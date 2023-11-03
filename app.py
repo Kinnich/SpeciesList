@@ -4,7 +4,7 @@ from streamlit.components.v1 import html
 from st_keyup import st_keyup
 from streamlit_image_select import image_select
 from ai_util import get_animal_facts
-from iNat_util import get_iNat_locations, get_iNat_species_count
+from iNat_util import get_iNat_locations, get_iNat_species_count, clean_species_df
 
 # Set page config
 page_title = 'Local Wildlife'
@@ -51,57 +51,40 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
     
     st.subheader(f"{animal_class} in {best_match_loc.name}")
     
+    # Call iNat API
     species_list = get_iNat_species_count(place_id, animal_class)
+    species_df = clean_species_df(species_list)
     
-    if species_list['total_results'] == 0:
-        st.markdown("""**Sorry, there are no observations recorded in this location. 
-                 Please try a different location.**""")
-    else:
-        data = species_list['results']
-        normalized = pd.json_normalize(data)
-        df = pd.DataFrame.from_dict(normalized)
+    # Format records from df as a list of dicts, with column names as keys
+    records = species_df.to_dict('records')
 
-        df_short = df[
-            [
-                'taxon.default_photo.medium_url',
-                'taxon.preferred_common_name',
-                'taxon.name',
-                'count',
-            ]
-        ].copy()
+    number_species = len(species_df)
+    st.markdown(f'{number_species} species observed')
 
-        # Some records don't have a common name so use the scientific name instead
-        df_short['taxon.preferred_common_name'].fillna(df_short['taxon.name'], inplace=True)
-
-        number_species = len(df)
-        st.markdown(f'{number_species} species have been observed')
-
-        # TODO - cap the number we want to show on a page - or maybe no insects?
-        img = image_select(
-                label="Select an animal to learn more",
-                images=df_short['taxon.default_photo.medium_url'].tolist(),
-                captions=df_short['taxon.preferred_common_name'].tolist(),
-                use_container_width=False,
-                return_value='index'
-            )
-
-        if img:
-            with st.sidebar:
-                photo_link = df_short['taxon.default_photo.medium_url'].iloc[img]
-                latin_name = df_short['taxon.name'].iloc[img]
-                common_name = df_short['taxon.preferred_common_name'].iloc[img]
-                num_observations = df_short['count'].iloc[img]
-                st.header(common_name)
-                st.image(photo_link, width=300)
-                st.markdown(f"_{latin_name}_")
-                st.text(f"{num_observations} observations")
-                with st.spinner(f"Gathering info!"):
-                    text = get_animal_facts(common_name)
-                    st.markdown(text)
-
+    # TODO - cap the number we want to show on a page - or maybe no insects?
+    img = image_select(
+            label="Select an animal to learn more",
+            images=species_df['image'].tolist(),
+            captions=species_df['common_name'].tolist(),
+            use_container_width=False,
+            return_value='index'
+        )
+    # --- Sidebar --- pops up to display animal image and info
+    if img:
+        record = records[img]
+        with st.sidebar:
+            st.header(record['common_name'])
+            st.image(record['image'], width=300)
+            st.markdown(f"_{record['scientific_name']}_")
+            st.text(f"{record['count']} observations")
+            
+            # Call Pulze to generate fun facts! This takes a while...
+            with st.spinner(f"Tracking down info!"):
+                text = get_animal_facts(record['common_name'])
+                st.markdown(text)
 
 else:
-    # Starting page is displayed only until user enters a location in search bar
+    # Starting page is displayed at start of session and then only until user enters a location in search bar
     st.title('Identify local wildlife')
     st.markdown(
     """

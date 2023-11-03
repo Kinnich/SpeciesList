@@ -1,5 +1,6 @@
 """Module to hold all function calls to the INaturalist API"""
 import requests
+import pandas as pd
 from dataclasses import dataclass
 import streamlit as st
 
@@ -52,3 +53,41 @@ def get_iNat_species_count(place_id: int, animal_group: str) -> dict:
 
     return response.json()
     
+
+def clean_species_df(species_list: dict) -> pd.DataFrame:
+    """
+    Transform iNat API's JSON response to a cleaned dataframe with
+    simple column names and filling in missing info
+    """
+    if species_list['total_results'] == 0:
+        st.markdown("""**Sorry, there are no observations recorded in this location. 
+                 Please try a different location.**""")
+        
+    else:
+        data = species_list['results']
+        normalized = pd.json_normalize(data)
+        df = pd.DataFrame.from_dict(normalized)
+
+        df_short = df[
+            [
+                'taxon.default_photo.medium_url',
+                'taxon.preferred_common_name',
+                'taxon.name',
+                'count',
+            ]
+        ].copy()
+
+        df_short.rename(
+            columns = {
+                'taxon.default_photo.medium_url': 'image',
+                'taxon.preferred_common_name': 'common_name',
+                'taxon.name': 'scientific_name',
+            },
+            inplace=True
+        )
+        # If common name is missing, use latin name
+        df_short['common_name'].fillna(df_short['scientific_name'], inplace=True)
+
+        # TODO: find a default photo to use if no photo available
+    
+        return df_short
