@@ -63,14 +63,14 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
 
     # TODO - cap the number we want to show on a page - or maybe no insects?
     img = image_select(
-            label="Select an animal to learn more",
+            label="Select an animal to learn more in the sidebar",
             images=species_df['image'].tolist(),
             captions=species_df['common_name'].tolist(),
             use_container_width=False,
             return_value='index'
         )
     # --- Sidebar --- pops up to display animal image and info
-    if img:
+    if img is not None:
         record = records[img]
         with st.sidebar:
             st.header(record['common_name'])
