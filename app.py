@@ -83,10 +83,10 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
 
 else:
     # Starting page is displayed at start of session and then only until user enters a location in search bar
-    st.title('Identify local wildlife')
+    st.title('🐾  🦌 Track local wildlife! 🐿️ 🐾 ')
     st.markdown(
     """
-    This is a simple app built on the iNaturalist and Pulze AI API's to:  
+    This is a simple app built on the iNaturalist and Pulze.ai APIs' to:  
     1. Show what wildlife has been observed in an area
     2. Describe the tracks and signs made by an animal  
 
