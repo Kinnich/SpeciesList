@@ -1,6 +1,4 @@
-import pandas as pd
 import streamlit as st
-from streamlit.components.v1 import html
 from st_keyup import st_keyup
 from streamlit_image_select import image_select
 from ai_util import get_animal_facts
