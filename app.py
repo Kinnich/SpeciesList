@@ -39,7 +39,7 @@ with col2:
 
     with col3:
         animal_class = st.selectbox(
-            'What class of animals are you interested in?',
+            'Choose an animal class:',
             ['Mammalia', 'Amphibia', 'Reptilia', 'Aves', 'Insecta', 'Mollusca', 'Arachnida'],
             key="animal_class",
         )
@@ -106,10 +106,10 @@ else:
     st.markdown(
     """
     This is a simple app built on the iNaturalist and Pulze AI API's to:  
-    1. List the wildlife in a given area and the number of observations recorded in iNaturalist
+    1. Show what wildlife has been observed in an area
     2. Describe the tracks and signs made by an animal  
 
     This is meant to aid in learning basic tracking skills and develop a greater understanding and appreciation for what you see when you look around outside.  
-    For more information about tracking checkout [Nature Tracking](https://naturetracking.com/)
+    For more information about tracking wildlife, checkout [Nature Tracking](https://naturetracking.com/)
     """
     )
