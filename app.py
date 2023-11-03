@@ -3,6 +3,7 @@ import streamlit as st
 from streamlit.components.v1 import html
 from st_keyup import st_keyup
 from streamlit_modal import Modal
+from streamlit_image_select import image_select
 from ai_util import get_animal_facts
 from iNat_util import get_iNat_locations, get_iNat_species_count
 
@@ -17,14 +18,14 @@ if 'animal_class' not in st.session_state:
 if 'place_id' not in st.session_state:
     st.session_state.place_id = None
 
-# ---Sidebar---
-with st.sidebar:
-    st.markdown('## Choose a location 🔎 🌎')
-    
+# --- Search bar ---
+st.markdown('##### Choose a location 🔎 🌎')
+col1, col2, col3 = st.columns(3)
+with col1:
     location = st_keyup('Enter region, county or city:', placeholder='ex: City of Austin')
-    
-    # Get list of valid locations from iNaturalist given user input location
     possible_locations = get_iNat_locations(location) # list of Location objects
+
+with col2:
     best_match_loc = st.selectbox(
         'Choose the best match:',
         options=possible_locations,
@@ -32,22 +33,23 @@ with st.sidebar:
         help="If your location doesn't appear in the list, \
             try spelling out the entire name and the state abbreviation"
     )
-
     if best_match_loc:
         # Get the iNaturalist id for the location (needed to query the species lists)
         place_id = best_match_loc.id
         st.session_state.place_id = place_id
 
-        # Set an animal group
+    with col3:
         animal_class = st.selectbox(
             'What class of animals are you interested in?',
-            ['Mammalia', 'Amphibia', 'Reptilia', 'Aves', 'Insecta', 'Mollusca'],
+            ['Mammalia', 'Amphibia', 'Reptilia', 'Aves', 'Insecta', 'Mollusca', 'Arachnida'],
             key="animal_class",
         )
 
-# ---Main page --- 
-# Will display table only once location and animal group are selected from sidebar
+
+# --- Main page --- 
+# Will show images only once a location is entered in search bar
 if best_match_loc and st.session_state.animal_class and st.session_state.place_id:
+    
     st.subheader(f"{animal_class} in {best_match_loc.name}")
     
     species_list = get_iNat_species_count(place_id, animal_class)
@@ -56,7 +58,6 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
         st.markdown("""**Sorry, there are no observations recorded in this location. 
                  Please try a different location.**""")
     else:
-        
         data = species_list['results']
         normalized = pd.json_normalize(data)
         df = pd.DataFrame.from_dict(normalized)
@@ -70,55 +71,39 @@ if best_match_loc and st.session_state.animal_class and st.session_state.place_i
             ]
         ].copy()
 
+        # Some records don't have a common name so use the scientific name instead
+        df_short['taxon.preferred_common_name'].fillna(df_short['taxon.name'], inplace=True)
+
         number_species = len(df)
-        st.markdown(f'There have been {number_species} species observed in this location')
-        
-        # Create container to hold the form with selectbox
-        container = st.container()
-    
-        # Display data in interactive df
-        st.dataframe(
-            df_short,
-            column_config={
-                'taxon.default_photo.medium_url': st.column_config.ImageColumn(label='Image', width='small'),
-                'taxon.preferred_common_name': 'Common Name',
-                'taxon.name': 'Latin Name',
-                'count': st.column_config.NumberColumn(label='Observations', width='medium'),
-            },
-            hide_index=True,
-        )
-        
-        # Get tracking info for a selected animal
-        with container:
-            # using a 'form' around the 'select box' so the popup box will close and not freeze
-            with st.form('animal_select'):
-                animal = st.selectbox(
-                    'Select an animal to learn how to identify their tracks and sign:',
-                    options=df_short['taxon.preferred_common_name'].tolist(),
-                    )
-                submitted = st.form_submit_button("Tell me more!")
+        st.markdown(f'{number_species} species have been observed')
 
-            if submitted:
-                photo_link = df_short[df_short['taxon.preferred_common_name'] == animal]['taxon.default_photo.medium_url'].iloc[0]
-                latin_name = df_short[df_short['taxon.preferred_common_name'] == animal]['taxon.name'].iloc[0]
+        # TODO - cap the number we want to show on a page - or maybe no insects?
+        img = image_select(
+                label="Select an animal to learn more",
+                images=df_short['taxon.default_photo.medium_url'].tolist(),
+                captions=df_short['taxon.preferred_common_name'].tolist(),
+                use_container_width=False,
+                return_value='index'
+            )
 
-                # Create and format the popup window
-                modal = Modal(key=f"{animal}",title=f"{animal}", padding=10, max_width='650')
-                
-                with modal.container():
-                    col1, col2 = st.columns(2, gap="small")
-                    with col1:
-                        st.image(photo_link, width=300)
-                        st.markdown(f"_{latin_name}_")
-                    with col2:
-                        with st.spinner(f"Gathering info!"):
-                            text = get_animal_facts(animal)
-                            html(text, height=300, scrolling=True, width=300)
+        if img:
+            with st.sidebar:
+                photo_link = df_short['taxon.default_photo.medium_url'].iloc[img]
+                latin_name = df_short['taxon.name'].iloc[img]
+                common_name = df_short['taxon.preferred_common_name'].iloc[img]
+                num_observations = df_short['count'].iloc[img]
+                st.header(common_name)
+                st.image(photo_link, width=300)
+                st.markdown(f"_{latin_name}_")
+                st.text(f"{num_observations} observations")
+                with st.spinner(f"Gathering info!"):
+                    text = get_animal_facts(common_name)
+                    st.markdown(text)
 
 
 else:
-    # Default starting page
-    st.title('Identify local wildlife!')
+    # Starting page is displayed only until user enters a location in search bar
+    st.title('Identify local wildlife')
     st.markdown(
     """
     This is a simple app built on the iNaturalist and Pulze AI API's to:  
@@ -129,5 +114,3 @@ else:
     For more information about tracking checkout [Nature Tracking](https://naturetracking.com/)
     """
     )
-    st.divider()
-    st.write("⬅️ To get started, choose a location in the sidebar!")
