@@ -2,5 +2,5 @@ requests>=2.31
 pandas>=2.1
 openai>=0.28
 streamlit==1.28
-streamlit-keyup>=0.2
-streamlit-modal>=0.1
+streamlit-keyup==0.2
+streamlit-image-select==0.6
